@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Prompt Master</title>
+    <style>
+      /* 核心布局逻辑 */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background-color: #f8fafc;
+        overflow: hidden;
+      }
+
+      #clearSearchBtn:hover {
+        color: #64748b !important;
+        transform: scale(1.1);
+      }
+
+      /* 确保搜索框在输入文字时不会被 X 挡住文字 */
+      .search-input {
+        transition: all 0.2s;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translate(-50%, 20px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
+      }
+
+      #toast {
+        animation: fadeInUp 0.3s ease-out;
+        /* 弹出时的动画 */
+      }
+
+      /* 设置按钮 */
+      #settingsBtn:hover {
+        background-color: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+        transform: scale(1.05);
+      }
+
+      #settingsBtn:active {
+        transform: scale(0.95);
+      }
+
+      #newTag:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      /* 滚动条美化 */
+      #tagDropdown::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      #tagDropdown::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+      }
+
+      .app-container {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+      }
+
+      /* 1. 侧边栏宽度减半 */
+      aside {
+        width: 130px;
+        /* 从 260px 减小 */
+        background-color: white;
+        border-right: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        padding: 24px 10px;
+        /* 缩小内边距以适应更窄的宽度 */
+      }
+
+      /* 调整 Logo 和文字大小以适应窄边栏 */
+      .logo {
+        font-size: 16px;
+        font-weight: bold;
+        color: #2563eb;
+        margin-bottom: 24px;
+        text-align: center;
+      }
+
+      .nav-item {
+        padding: 8px;
+        margin-bottom: 4px;
+        border-radius: 6px;
+        color: #475569;
+        text-decoration: none;
+        font-size: 13px;
+        /* 字体稍微调小一点 */
+        text-align: center;
+        /* 文字居中 */
+        transition: background 0.2s;
+      }
+
+      .nav-item:hover {
+        background-color: #f1f5f9;
+      }
+
+      .nav-item.active {
+        background-color: #eff6ff !important;
+        color: #2563eb !important;
+        font-weight: 600;
+        border-left: 4px solid #2563eb;
+        /* 增加一个左侧边框提示 */
+      }
+
+      /* 主内容区样式 */
+      main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      header {
+        height: 80px;
+        background-color: white;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        items-center: center;
+        padding: 0 32px;
+        display: flex;
+        align-items: center;
+      }
+
+      .search-input {
+        width: 100%;
+        max-width: 400px;
+        padding: 8px 16px;
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        outline: none;
+      }
+
+      /* 2. 强制右边卡片为三列 */
+      .grid-container {
+        padding: 32px;
+        display: grid;
+        /* 这里的 repeat(3, 1fr) 确保了三列布局 */
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        overflow-y: auto;
+      }
+
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        /* 核心：将鼠标指针改为手型 */
+        transition: all 0.2s ease;
+        /* 平滑过渡效果 */
+        user-select: none;
+        /* 防止点击过快时意外选中了卡片里的文字 */
+        position: relative;
+      }
+
+      /* 增加悬停时的视觉反馈，让“可点击感”更强 */
+      .card:hover {
+        border-color: #2563eb;
+        /* 悬停时边框变蓝 */
+        background-color: #f8faff;
+        /* 悬停时背景微变蓝 */
+        transform: translateY(-2px);
+        /* 向上轻微浮动 */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        /* 增加投影 */
+      }
+
+      /* 模拟点击时的压下效果 */
+      .card:active {
+        transform: translateY(0);
+        background-color: #f1f5f9;
+      }
+
+      /* 只有在非置顶状态下的普通卡片才显示这个提示（防止视觉太乱） */
+      .card:not(.pinned-card):hover::after {
+        content: "点击卡片复制";
+        position: absolute;
+        bottom: 8px;
+        right: 12px;
+        font-size: 11px;
+        color: #2563eb;
+        background: #eff6ff;
+        padding: 2px 6px;
+        border-radius: 4px;
+        opacity: 0.8;
+      }
+
+      .card-tag {
+        display: inline-block;
+        padding: 2px 8px;
+        background: #dcfce7;
+        color: #15803d;
+        border-radius: 6px;
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+
+      .card-title {
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+
+      .card-body {
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.6;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      /* 当卡片通过 Tab 键获得焦点时的样式 */
+      .card:focus {
+        outline: none;
+        /* 去掉浏览器默认的笨拙边框 */
+        border-color: #2563eb !important;
+        background-color: #eff6ff !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3) !important;
+        /* 增加一个外发光 */
+        transform: translateY(-4px);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app-container">
+      <aside id="sidebar">
+        <div class="logo">Prompt Master</div>
+        <a href="#" class="nav-item active" data-filter="all">全部提示词</a>
+        <button
+          id="addTagBtn"
+          style="
+            width: 100%;
+            display: none;
+            margin: 8px 0;
+            padding: 6px;
+            font-size: 12px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 6px;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+          "
+        >
+          + 新增分类标签
+        </button>
+        <a href="#" class="nav-item" data-filter="writing">写作辅助</a>
+        <a href="#" class="nav-item" data-filter="coding">编程代码</a>
+        <a href="#" class="nav-item" data-filter="marketing">市场营销</a>
+
+        <div
+          style="display: flex; gap: 8px; margin-top: auto; margin-bottom: 12px"
+        >
+          <button
+            id="exportBtn"
+            style="
+              flex: 1;
+              padding: 8px;
+              font-size: 12px;
+              border: 1px solid #e2e8f0;
+              border-radius: 6px;
+              background: white;
+              cursor: pointer;
+            "
+          >
+            导出
+          </button>
+          <button
+            id="importBtn"
+            style="
+              flex: 1;
+              padding: 8px;
+              font-size: 12px;
+              border: 1px solid #e2e8f0;
+              border-radius: 6px;
+              background: white;
+              cursor: pointer;
+            "
+          >
+            导入
+          </button>
+        </div>
+        <input
+          type="file"
+          id="fileInput"
+          style="display: none"
+          accept=".json"
+        />
+
+        <button
+          id="addBtn"
+          style="
+            margin-top: auto;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+          "
+        >
+          + 新增提示词
+        </button>
+      </aside>
+
+      <main>
+        <header
+          style="
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 24px;
+            height: 64px;
+            min-height: 64px;
+            max-height: 64px;
+            box-sizing: border-box;
+            overflow: hidden;
+            background: white;
+            border-bottom: 1px solid #f1f5f9;
+          "
+        >
+          <div
+            style="
+              position: relative;
+              flex: 1;
+              height: 40px;
+              display: flex;
+              align-items: center;
+            "
+          >
+            <input
+              type="text"
+              id="searchInput"
+              class="search-input"
+              placeholder="搜索提示词..."
+              style="
+                width: 100%;
+                height: 40px;
+                padding: 0 40px 0 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                box-sizing: border-box;
+                outline: none;
+                font-size: 14px;
+              "
+            />
+
+            <button
+              id="clearSearchBtn"
+              style="
+                display: none;
+                position: absolute;
+                right: 320px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 28px;
+                height: 28px;
+                border: none;
+                background: transparent;
+                color: #94a3b8;
+                cursor: pointer;
+                display: none; /* 由 JS 控制 */
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                padding: 0;
+                z-index: 5;
+              "
+            >
+              ✕
+            </button>
+          </div>
+          <button
+            id="settingsBtn"
+            title="快捷键设置"
+            style="
+              width: 36px;
+              height: 36px;
+              flex-shrink: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: white;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: all 0.2s;
+              font-size: 18px;
+            "
+          >
+            ⚙️
+          </button>
+        </header>
+
+        <div class="grid-container" id="cardGrid">
+          <div class="card" data-category="writing">
+            <span class="card-tag">写作辅助</span>
+            <div class="card-title">文章润色专家</div>
+            <div class="card-body">内容...</div>
+          </div>
+
+          <div class="card" data-category="coding">
+            <span class="card-tag" style="background: #f3e8ff; color: #7e22ce"
+              >编程代码</span
+            >
+            <div class="card-title">Tailwind 助手</div>
+            <div class="card-body">内容...</div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div
+      id="modalOverlay"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: white;
+          width: 500px;
+          padding: 32px;
+          border-radius: 16px;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        "
+      >
+        <h2 style="margin-top: 0; margin-bottom: 20px; color: #1e293b">
+          新增提示词
+        </h2>
+
+        <div style="margin-bottom: 16px">
+          <label
+            style="
+              display: block;
+              font-size: 14px;
+              font-weight: 500;
+              margin-bottom: 4px;
+              color: #475569;
+            "
+            >名称</label
+          >
+          <input
+            type="text"
+            id="newName"
+            style="
+              width: 100%;
+              padding: 10px;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              box-sizing: border-box;
+              outline: none;
+            "
+          />
+        </div>
+
+        <div style="margin-bottom: 16px; position: relative">
+          <label
+            style="
+              display: block;
+              font-size: 14px;
+              font-weight: 500;
+              margin-bottom: 4px;
+              color: #475569;
+            "
+            >标签</label
+          >
+          <input
+            type="text"
+            id="newTag"
+            autocomplete="off"
+            placeholder="输入或选择分类"
+            style="
+              width: 100%;
+              padding: 10px;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              box-sizing: border-box;
+              outline: none;
+              transition: border-color 0.2s;
+            "
+          />
+
+          <div
+            id="tagDropdown"
+            style="
+              display: none;
+              position: absolute;
+              top: 100%;
+              left: 0;
+              right: 0;
+              background: white;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              margin-top: 4px;
+              box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+              z-index: 110;
+              max-height: 150px;
+              overflow-y: auto;
+            "
+          ></div>
+        </div>
+
+        <div style="margin-bottom: 24px">
+          <label
+            style="
+              display: block;
+              font-size: 14px;
+              font-weight: 500;
+              margin-bottom: 4px;
+              color: #475569;
+            "
+            >内容</label
+          >
+          <textarea
+            id="newContent"
+            rows="6"
+            style="
+              width: 100%;
+              padding: 10px;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              box-sizing: border-box;
+              resize: none;
+              outline: none;
+              font-family: inherit;
+            "
+          ></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px">
+          <button
+            id="cancelBtn"
+            style="
+              padding: 10px 20px;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              background: white;
+              color: #64748b;
+              cursor: pointer;
+              font-weight: 500;
+            "
+          >
+            取消
+          </button>
+          <button
+            id="saveBtn"
+            style="
+              padding: 10px 24px;
+              border: none;
+              border-radius: 8px;
+              background: #2563eb;
+              color: white;
+              cursor: pointer;
+              font-weight: 500;
+            "
+          >
+            保存
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+
+    <div
+      id="toast"
+      style="
+        display: none;
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-size: 14px;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        transition: opacity 0.3s ease;
+      "
+    >
+      已复制到剪贴板
+    </div>
+  </body>
+</html>

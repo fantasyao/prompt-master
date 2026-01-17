@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "AI Prompt Master",
+  "version": "1.0.0",
+  "options_page": "options.html",
+  "description": "一键搜索、管理你的 AI 提示词，支持全键盘高效操作与一键点击复制。",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "点击打开提示词管理器",
+    "default_icon": {
+      "16": "icons/icon1283.png",
+      "32": "icons/icon1283.png",
+      "48": "icons/icon1283.png",
+      "128": "icons/icon1283.png"
+    }
+  },
+
+  "icons": {
+    "16": "icons/icon1283.png",
+    "48": "icons/icon1283.png",
+    "128": "icons/icon1283.png"
+  },
+
+  "permissions": ["storage", "windows", "tabs", "system.display"],
+  "commands": {
+      "suggested_key": {
+        "default": "Alt+E",
+        "mac": "Alt+E"
+      },
+      "description": "快速打开提示词管理器"
+    }
+  }
+}
