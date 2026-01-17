@@ -25,6 +25,7 @@
 
   "permissions": ["storage", "windows", "tabs", "system.display"],
   "commands": {
+    "open-prompt-master": {
       "suggested_key": {
         "default": "Alt+E",
         "mac": "Alt+E"
