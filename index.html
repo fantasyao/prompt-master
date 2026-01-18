@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
@@ -8,8 +8,8 @@
       body {
         margin: 0;
         padding: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background-color: #f8fafc;
         overflow: hidden;
       }
@@ -164,7 +164,9 @@
         border-radius: 16px;
         border: 1px solid #e2e8f0;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
         cursor: pointer;
         /* 核心：将鼠标指针改为手型 */
         transition: all 0.2s ease;
@@ -419,7 +421,9 @@
           <div class="card" data-category="writing">
             <span class="card-tag">写作辅助</span>
             <div class="card-title">文章润色专家</div>
-            <div class="card-body">内容...</div>
+            <div class="card-body">
+              请将下面的文本润色为更通顺、更专业的中文，同时保留原意并给出三种不同风格（正式、亲切、技术性）的改写版本。
+            </div>
           </div>
 
           <div class="card" data-category="coding">
@@ -427,7 +431,21 @@
               >编程代码</span
             >
             <div class="card-title">Tailwind 助手</div>
-            <div class="card-body">内容...</div>
+            <div class="card-body">
+              根据下面的 UI 描述，生成对应的 Tailwind CSS 类名与简短示例
+              HTML，包含响应式样式和可访问性建议。
+            </div>
+          </div>
+
+          <div class="card" data-category="marketing">
+            <span class="card-tag" style="background: #fff7ed; color: #b45309"
+              >市场营销</span
+            >
+            <div class="card-title">市场文案生成器</div>
+            <div class="card-body">
+              为一款目标用户为职场人士的时间管理工具，生成三条不同角度的产品宣传文案（简洁、情感、功能导向），并包含一句
+              30 字以内的广告语。
+            </div>
           </div>
         </div>
       </main>
