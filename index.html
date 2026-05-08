@@ -42,13 +42,13 @@
       }
 
       /* 设置按钮 */
-      #settingsBtn:hover {
+      #sortBtn:hover, #settingsBtn:hover {
         background-color: #f1f5f9 !important;
         border-color: #cbd5e1 !important;
         transform: scale(1.05);
       }
 
-      #settingsBtn:active {
+      #sortBtn:active, #settingsBtn:active {
         transform: scale(0.95);
       }
 
@@ -395,6 +395,27 @@
               ✕
             </button>
           </div>
+          <button
+            id="sortBtn"
+            title="最新优先"
+            style="
+              width: 36px;
+              height: 36px;
+              flex-shrink: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: white;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: all 0.2s;
+              font-size: 14px;
+              color: #64748b;
+            "
+          >
+            ↓新
+          </button>
           <button
             id="settingsBtn"
             title="快捷键设置"

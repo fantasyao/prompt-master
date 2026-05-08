@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("modalOverlay");
   const modalTitle = modal.querySelector("h2");
   const settingsBtn = document.getElementById("settingsBtn");
+  const sortBtn = document.getElementById("sortBtn");
 
   // 标签输入与自定义下拉框
   const tagInput = document.getElementById("newTag");
@@ -21,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let allPrompts = [];
   let editingIndex = null;
+  let sortOrder = "desc"; // "desc" = 最新在前, "asc" = 最早在前
   const DEFAULT_PROMPTS = [
     {
       name: "文章润色专家",
@@ -46,19 +48,31 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   // --- 2. 初始化加载 ---
-  chrome.storage.local.get(["myPrompts"], (result) => {
+  chrome.storage.local.get(["myPrompts", "sortOrder"], (result) => {
+    // 读取排序偏好
+    sortOrder = result.sortOrder || "desc";
+    updateSortButton();
+
     // 如果存储中没有提示词或为空数组，则写入默认示例
     if (
       !result.myPrompts ||
       !Array.isArray(result.myPrompts) ||
       result.myPrompts.length === 0
     ) {
-      allPrompts = DEFAULT_PROMPTS.slice();
+      allPrompts = DEFAULT_PROMPTS.map((p, i) => ({
+        ...p,
+        createdAt: Date.now() - (DEFAULT_PROMPTS.length - i) * 60000,
+      }));
       chrome.storage.local.set({ myPrompts: allPrompts }, () => {
         renderAll();
       });
     } else {
-      allPrompts = result.myPrompts || [];
+      // 数据迁移：为没有 createdAt 的旧数据补上时间戳
+      allPrompts = result.myPrompts.map((p, i) => ({
+        ...p,
+        createdAt:
+          p.createdAt || Date.now() - (result.myPrompts.length - i) * 60000,
+      }));
       renderAll();
     }
   });
@@ -73,6 +87,27 @@ document.addEventListener("DOMContentLoaded", () => {
     settingsBtn.onclick = () => {
       // 跳轉到 Chrome 官方快捷鍵設置頁面
       chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+    };
+  }
+
+  // 排序按钮交互
+  function updateSortButton() {
+    if (!sortBtn) return;
+    if (sortOrder === "desc") {
+      sortBtn.textContent = "↓新";
+      sortBtn.title = "最新优先";
+    } else {
+      sortBtn.textContent = "↑旧";
+      sortBtn.title = "最早优先";
+    }
+  }
+
+  if (sortBtn) {
+    sortBtn.onclick = () => {
+      sortOrder = sortOrder === "desc" ? "asc" : "desc";
+      updateSortButton();
+      chrome.storage.local.set({ sortOrder });
+      renderCards();
     };
   }
 
@@ -224,7 +259,15 @@ document.addEventListener("DOMContentLoaded", () => {
     cardGrid.innerHTML = "";
     const displayList = [...allPrompts]
       .map((item, originalIndex) => ({ ...item, originalIndex }))
-      .sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
+      .sort((a, b) => {
+        // 1. 置顶优先
+        const pinDiff = (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0);
+        if (pinDiff !== 0) return pinDiff;
+        // 2. 按创建时间排序
+        return sortOrder === "desc"
+          ? (b.createdAt || 0) - (a.createdAt || 0)
+          : (a.createdAt || 0) - (b.createdAt || 0);
+      });
 
     displayList.forEach((item, index) => {
       const matchesSearch =
@@ -402,7 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
         content,
       };
     } else {
-      allPrompts.push({ name, tag, content, isPinned: false });
+      allPrompts.push({ name, tag, content, isPinned: false, createdAt: Date.now() });
     }
 
     modal.style.display = "none";
