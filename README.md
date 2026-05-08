@@ -1,7 +1,8 @@
 # prompt-master
 
 一键搜索、管理你的 AI 提示词，支持全键盘高效操作，对鼠标也友好，支持一键点击复制。
-`<img width="1788" height="1202" alt="扩展页面1" src="https://github.com/user-attachments/assets/3e6b6338-1359-4df2-9544-5c8945da1e86" />`
+<img width="2217" height="1600" alt="PixPin_2026-05-08_13-44-01" src="https://github.com/user-attachments/assets/77c6e7e4-229b-45f5-88af-d1b1c26a524c" />
+
 
 本插件是由于市面上的很多插件都普遍只支持键盘操作，不太利于一只手用鼠标的情况，所以在AI的帮助下开发了这款对键盘和鼠标都相对友好的插件。
 
